@@ -21,6 +21,11 @@ WhatsApp / Telegram / Email / Scheduler
           resultado + evidencia + notificación
 ```
 
+El catálogo mantiene la definición de cada procedimiento por `procedure_id` y
+versión. Una versión solo puede utilizarse como versión activa después de ser
+registrada y activada explícitamente; los expedientes ya creados conservan la
+versión con la que comenzaron.
+
 ## Módulos del núcleo
 
 - **Expediente**: fuente de verdad de la ejecución de BACO: entradas, estado,

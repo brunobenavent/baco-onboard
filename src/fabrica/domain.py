@@ -23,6 +23,20 @@ class CampaignRequest:
     source_id: str
 
 
+@dataclass(frozen=True)
+class ProcedureDefinition:
+    """Ficha versionada de un procedimiento, separada de sus herramientas."""
+
+    procedure_id: str
+    version: str
+    name: str
+    description: str
+    severity: str
+    requires_approval: bool = True
+    supports_simulation: bool = True
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+
 @dataclass
 class Expedient:
     """Contexto durable y agnóstico de una petición de proceso."""

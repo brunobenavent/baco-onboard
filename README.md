@@ -8,6 +8,10 @@ La definición de dominio está en [GLOSSARY.md](GLOSSARY.md), la decisión
 arquitectónica en [docs/adr/0001-agnostic-process-core.md](docs/adr/0001-agnostic-process-core.md)
 y el diseño ampliado en [docs/architecture.md](docs/architecture.md).
 
+El núcleo ya incluye un expediente durable y un catálogo versionado de
+procedimientos. El catálogo no conoce proveedores externos: cada procedimiento
+declara su severidad, si requiere aprobación y si admite simulación.
+
 ## Mapa de la fábrica
 
 Abre [diagrams/factory-map.html](diagrams/factory-map.html) para explorar la

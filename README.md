@@ -240,7 +240,15 @@ El primer diálogo es guiado:
 El receptor solo procesa el `BACO_TELEGRAM_CHAT_ID` configurado y guarda el
 estado de la conversación localmente. En esta primera versión `telegram-poll`
 consulta una tanda de mensajes; después podremos dejarlo ejecutándose como
-servicio o sustituirlo por un webhook.
+servicio o sustituirlo por un webhook. Para dejarlo escuchando continuamente:
+
+```bash
+set -a; source .env; set +a
+PYTHONPATH=src python3 -m fabrica.cli telegram-listen
+```
+
+Ese proceso responde automáticamente a los mensajes nuevos hasta que se
+detiene con `Ctrl-C`.
 
 ### 5. Estados posibles
 

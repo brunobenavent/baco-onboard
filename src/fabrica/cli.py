@@ -201,6 +201,12 @@ def main() -> int:
     telegram_poll.add_argument("--state-dir", type=Path, default=Path(".baco/state"))
     telegram_poll.add_argument("--timeout", type=int, default=0)
 
+    telegram_listen = subparsers.add_parser(
+        "telegram-listen", help="mantiene Telegram escuchando continuamente"
+    )
+    telegram_listen.add_argument("--state-dir", type=Path, default=Path(".baco/state"))
+    telegram_listen.add_argument("--timeout", type=int, default=30)
+
     prepare = subparsers.add_parser("prepare", help="prepara una campaña desde Excel")
     prepare.add_argument("--request", type=Path, required=True)
     prepare.add_argument("--articles", type=Path, required=True)
@@ -250,6 +256,28 @@ def main() -> int:
         )
         processed = TelegramPoller(client, intake, args.state_dir).poll_once(args.timeout)
         print(json.dumps({"status": "polled", "processed": processed}, ensure_ascii=False))
+        return 0
+
+    if args.command == "telegram-listen":
+        chat_id = os.environ.get("BACO_TELEGRAM_CHAT_ID")
+        if not chat_id:
+            print("Falta BACO_TELEGRAM_CHAT_ID")
+            return 2
+        from .adapters.telegram import TelegramBotMessenger
+        from .telegram_intake import JsonConversationStore, TelegramAutomationIntake
+        from .telegram_poll import TelegramPoller
+
+        client = TelegramBotMessenger.from_environment()
+        intake = TelegramAutomationIntake(
+            chat_id,
+            client,
+            JsonConversationStore(args.state_dir / "conversations"),
+        )
+        print("BACO Telegram listener activo. Pulsa Ctrl-C para detenerlo.")
+        try:
+            TelegramPoller(client, intake, args.state_dir).listen(args.timeout)
+        except KeyboardInterrupt:
+            print("BACO Telegram listener detenido.")
         return 0
 
     if args.command in {"approve", "reject", "expire", "status"}:

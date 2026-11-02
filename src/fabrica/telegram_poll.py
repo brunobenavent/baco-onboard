@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import time
 from typing import Any, Optional
 
 from .telegram_intake import TelegramAutomationIntake
@@ -28,6 +29,15 @@ class TelegramPoller:
                 self._write_offset(update_id + 1)
             processed += 1
         return processed
+
+    def listen(self, timeout: int = 30, retry_delay: float = 2.0) -> None:
+        """Escucha continuamente hasta recibir Ctrl-C."""
+        while True:
+            try:
+                self.poll_once(timeout=timeout)
+            except Exception as error:
+                print(f"telegram-listen: {error}")
+                time.sleep(retry_delay)
 
     def _handle(self, update: dict[str, Any]) -> None:
         message = update.get("message", {})

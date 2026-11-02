@@ -40,6 +40,10 @@ de la organización. Puede dejar el expediente listo para ejecución, enviarlo a
 aprobar, rechazar o solicitar cambios. Cada decisión registra identidad,
 comentario, estado y evento en la línea temporal del expediente.
 
+`NotificationService` publica el resultado por el canal de origen mediante un
+adapter registrado. El núcleo no sabe si ese adapter termina en Telegram,
+WhatsApp, email u otro canal.
+
 ## Módulos del núcleo
 
 - **Expediente**: fuente de verdad de la ejecución de BACO: entradas, estado,

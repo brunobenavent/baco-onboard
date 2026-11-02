@@ -5,6 +5,12 @@ from typing import Any, Optional, Protocol
 from .domain import Expedient, ToolResult
 
 
+class ToolExecutionError(Exception):
+    def __init__(self, message: str, retriable: bool = False):
+        super().__init__(message)
+        self.retriable = retriable
+
+
 class Tool(Protocol):
     def execute(
         self, operation: str, payload: dict[str, Any], idempotency_key: str
@@ -92,7 +98,31 @@ class ExecutionService:
             )
 
         tool = self.registry.get(tool_name)
-        output = tool.execute(operation, payload, idempotency_key)
+        try:
+            output = tool.execute(operation, payload, idempotency_key)
+        except ToolExecutionError as error:
+            status = "failed_retriable" if error.retriable else "failed"
+            result = ToolResult(
+                success=False,
+                status=status,
+                error=str(error),
+                retriable=error.retriable,
+            )
+            self.ledger.save(idempotency_key, result)
+            expedient.errors.append(str(error))
+            expedient.record_event(
+                "tool_failed",
+                {
+                    "tool": tool_name,
+                    "operation": operation,
+                    "idempotency_key": idempotency_key,
+                    "retriable": error.retriable,
+                    "error": str(error),
+                },
+            )
+            expedient.move_to(status)
+            return result
+
         result = ToolResult(success=True, status="executed", output=output)
         self.ledger.save(idempotency_key, result)
         expedient.evidence["execution"] = {

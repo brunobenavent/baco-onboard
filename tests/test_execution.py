@@ -3,7 +3,7 @@ import tempfile
 from pathlib import Path
 
 from fabrica.domain import Expedient
-from fabrica.execution import ExecutionService, ToolRegistry
+from fabrica.execution import ExecutionService, ToolExecutionError, ToolRegistry
 from fabrica.repositories import JsonExecutionRepository
 
 
@@ -14,6 +14,14 @@ class FakeTool:
     def execute(self, operation, payload, idempotency_key):
         self.calls.append((operation, payload, idempotency_key))
         return {"remote_id": "remote-123", "operation": operation}
+
+
+class FailingTool:
+    def __init__(self, retriable):
+        self.retriable = retriable
+
+    def execute(self, operation, payload, idempotency_key):
+        raise ToolExecutionError("Servicio temporalmente no disponible", self.retriable)
 
 
 def executable_expedient():
@@ -107,6 +115,32 @@ class ExecutionServiceTests(unittest.TestCase):
 
             self.assertEqual(duplicate.status, "already_executed")
             self.assertEqual(len(tool.calls), 1)
+
+    def test_records_a_retriable_tool_failure(self):
+        registry = ToolRegistry()
+        registry.register("reporting", FailingTool(retriable=True))
+        service = ExecutionService(registry)
+        expedient = executable_expedient()
+
+        result = service.execute(expedient, "reporting", "create", {}, idempotency_key="retry-key")
+
+        self.assertFalse(result.success)
+        self.assertTrue(result.retriable)
+        self.assertEqual(result.status, "failed_retriable")
+        self.assertEqual(expedient.status, "failed_retriable")
+
+    def test_records_a_non_retriable_tool_failure(self):
+        registry = ToolRegistry()
+        registry.register("reporting", FailingTool(retriable=False))
+        service = ExecutionService(registry)
+        expedient = executable_expedient()
+
+        result = service.execute(expedient, "reporting", "create", {}, idempotency_key="invalid-key")
+
+        self.assertFalse(result.success)
+        self.assertFalse(result.retriable)
+        self.assertEqual(result.status, "failed")
+        self.assertEqual(expedient.status, "failed")
 
 
 if __name__ == "__main__":

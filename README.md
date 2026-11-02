@@ -23,6 +23,9 @@ quedan bloqueados.
 La decisión humana se gestiona mediante `ApprovalService`, que permite aprobar,
 rechazar o solicitar cambios y deja la decisión en la evidencia del expediente.
 
+Los resultados pueden notificarse mediante `NotificationService`, que usa un
+adapter por canal y registra cada notificación en la línea temporal.
+
 ## Mapa de la fábrica
 
 Abre [diagrams/factory-map.html](diagrams/factory-map.html) para explorar la

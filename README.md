@@ -66,29 +66,22 @@ MailchimpCampaignSender (siguiente fase)
 El workflow no conoce GitHub, un chat ni Mailchimp. Esas piezas son adapters
 que traducen entradas y salidas externas al modelo interno de la fábrica.
 
-## Ejecutar
+## Cómo se usa
+
+### 1. Instalar la fábrica
 
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -e .
-.venv/bin/python -m fabrica.cli prepare \
-  --request request.example.json \
-  --articles articulos.example.xlsx \
-  --output campaign-draft.json
+.venv/bin/baco --help
 ```
 
-## Comandos de la fábrica
-
-Después de instalar el proyecto, el comando principal es `baco`:
-
-```bash
-baco --help
-```
+### 2. Comandos de la fábrica
 
 Iniciar un proceso y crear su expediente:
 
 ```bash
-baco run \
+.venv/bin/baco run \
   --message "Resume el PDF adjunto" \
   --channel email \
   --organization empresa-demo \
@@ -101,33 +94,111 @@ baco run \
   --output .baco/expedients/expedient.json
 ```
 
+Entradas obligatorias de `baco run`:
+
+| Entrada | Ejemplo | Significado |
+| --- | --- | --- |
+| `--message` | `Resume el PDF` | Petición normalizada |
+| `--channel` | `email` | Canal de origen |
+| `--organization` | `empresa-demo` | Organización propietaria |
+| `--requested-by` | `brunobenavent@gmail.com` | Solicitante |
+| `--external-id` | `mail-001` | Identificador del evento original |
+| `--procedure-id` | `summarize-pdf-email` | Procedimiento a iniciar |
+| `--procedure-version` | `1.0` | Versión exacta |
+| `--severity` | `low` | `low`, `medium`, `high` o `critical` |
+| `--state-dir` | `.baco/state` | Estado persistente |
+| `--output` | `.baco/expedient.json` | Salida JSON del comando |
+
 Consultar o resolver el expediente:
 
 ```bash
-baco status --id EXPEDIENT_ID --state-dir .baco/state
-baco approve --id EXPEDIENT_ID --by operador-1 --state-dir .baco/state
-baco reject --id EXPEDIENT_ID --by operador-1 --comment "Falta revisar el PDF" --state-dir .baco/state
-baco expire --id EXPEDIENT_ID --state-dir .baco/state
+.venv/bin/baco status --id EXPEDIENT_ID --state-dir .baco/state
+.venv/bin/baco approve --id EXPEDIENT_ID --by operador-1 --comment "Revisado" --state-dir .baco/state
+.venv/bin/baco reject --id EXPEDIENT_ID --by operador-1 --comment "Falta revisar el PDF" --state-dir .baco/state
+.venv/bin/baco expire --id EXPEDIENT_ID --state-dir .baco/state
 ```
 
 `baco run` es la entrada equivalente a un `superboard run`: inicia un proceso
-con una definición y versión concretas. La CLI todavía no conecta Gmail ni
-Telegram por sí sola; esos adapters se registran cuando se configura cada
-entorno.
+con una definición y versión concretas. `baco intake` es un alias para registrar
+la entrada inicial.
 
-Para usarlo con tus propios datos, el Excel debe tener estas columnas:
+### 3. Proceso de campaña desde Excel
+
+El comando `prepare` mantiene el primer prototipo:
+
+```bash
+.venv/bin/baco prepare \
+  --request request.example.json \
+  --articles articulos.example.xlsx \
+  --output campaign-draft.json
+```
+
+El JSON debe tener:
+
+```json
+{
+  "subject": "Novedades",
+  "audience": "clientes-españa",
+  "scheduled_for": null,
+  "source": "email",
+  "source_id": "mail-001"
+}
+```
+
+El Excel debe contener las columnas:
 
 ```text
 title, description, url, image_url
 ```
 
+### 4. Proceso email → PDF → resumen → Telegram
+
+El procedimiento `summarize-pdf-email` espera conceptualmente:
+
+```text
+canal: email
+remitente permitido: brunobenavent@gmail.com
+adjuntos: exactamente un PDF
+destino: destinatario de Telegram
+```
+
+Su recorrido es:
+
+```text
+EmailMessage
+  → validar remitente
+  → localizar un PDF
+  → extraer texto con PypdfTextExtractor
+  → resumir con Summarizer
+  → enviar mediante TelegramMessenger
+```
+
+El procedimiento y sus adapters ya tienen pruebas falsas de extremo a
+extremo. Gmail y Telegram todavía deben registrarse en el entorno de ejecución.
+
+### 5. Estados posibles
+
+```text
+received              entrada recibida
+awaiting_confirmation propuesta pendiente de confirmación
+awaiting_approval     necesita aprobación humana
+ready_for_execution   autorizado para ejecutar
+completed             terminado correctamente
+changes_requested     devuelto para cambios
+rejected              rechazado
+approval_expired      aprobación caducada
+failed                error no retriable
+failed_retriable      error que puede reintentarse
+blocked               bloqueado por política
+```
+
 ## Contratos importantes
 
-- `WorkRepository` conserva el trabajo y permite sustituir JSON por SQLite,
-  PostgreSQL o un servicio externo.
-- `ArticleReader` permite sustituir Excel por CSV, Google Sheets o un adjunto
-  recibido desde un chat.
-- `CampaignSender` permite sustituir el envío simulado por Mailchimp, Brevo o
-  un proveedor interno.
-- El workflow solo prepara y valida. El envío queda fuera hasta añadir una
-  aprobación explícita.
+- `WorkRepository` conserva trabajos y permite sustituir JSON por SQLite,
+  PostgreSQL u otro servicio.
+- `ArticleReader` permite sustituir Excel por CSV, Google Sheets o un adjunto.
+- `PdfTextExtractor` extrae texto sin decidir cómo se resume.
+- `Summarizer` permite conectar un agente, un modelo o un resumidor local.
+- `Messenger` permite conectar Telegram, WhatsApp, email u otro canal.
+- `ToolRegistry` y `ExecutionService` ejecutan adapters con simulación,
+  idempotencia y evidencia.

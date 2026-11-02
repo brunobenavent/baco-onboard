@@ -200,6 +200,22 @@ resumen son reales; solo se sustituyen los dos extremos externos. También se
 puede usar el formato JSON de [email.example.json](examples/email.example.json)
 si se quiere simular un email con varios metadatos.
 
+### Conectar Telegram real
+
+Telegram no tiene un conector nativo disponible en este entorno. Para usar un
+bot real:
+
+```bash
+./scripts/setup-telegram.sh
+set -a; source .env; set +a
+.venv/bin/baco telegram-test --confirm-send
+```
+
+El wizard explica cómo crear el bot con BotFather y guarda el token en
+`BACO_TELEGRAM_BOT_TOKEN`. El chat se configura en `BACO_TELEGRAM_CHAT_ID`.
+El token nunca debe escribirse en el repositorio ni pasarse como argumento del
+comando.
+
 ### 5. Estados posibles
 
 ```text

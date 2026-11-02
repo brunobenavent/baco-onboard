@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 from uuid import uuid4
 
@@ -187,6 +188,13 @@ def main() -> int:
     expire.add_argument("--id", required=True)
     expire.add_argument("--state-dir", type=Path, required=True)
 
+    telegram_test = subparsers.add_parser(
+        "telegram-test", help="envía un mensaje de prueba mediante Telegram"
+    )
+    telegram_test.add_argument("--chat-id", default=os.environ.get("BACO_TELEGRAM_CHAT_ID"))
+    telegram_test.add_argument("--message", default="Prueba BACO: conexión de Telegram correcta")
+    telegram_test.add_argument("--confirm-send", action="store_true")
+
     prepare = subparsers.add_parser("prepare", help="prepara una campaña desde Excel")
     prepare.add_argument("--request", type=Path, required=True)
     prepare.add_argument("--articles", type=Path, required=True)
@@ -205,6 +213,19 @@ def main() -> int:
         if missing:
             parser.error(f"run técnico requiere: {', '.join('--' + field.replace('_', '-') for field in missing)}")
         return _run_process(args)
+
+    if args.command == "telegram-test":
+        if not args.confirm_send:
+            print("No se envía nada. Repite con --confirm-send para confirmar el envío.")
+            return 2
+        if not args.chat_id:
+            print("Falta --chat-id o BACO_TELEGRAM_CHAT_ID")
+            return 2
+        from .adapters.telegram import TelegramBotMessenger
+
+        message_id = TelegramBotMessenger.from_environment().send(args.chat_id, args.message)
+        print(json.dumps({"status": "sent", "message_id": message_id}, ensure_ascii=False))
+        return 0
 
     if args.command in {"approve", "reject", "expire", "status"}:
         repository = JsonExpedientRepository(args.state_dir)

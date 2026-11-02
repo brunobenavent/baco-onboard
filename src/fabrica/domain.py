@@ -54,6 +54,18 @@ class PolicyDecision:
 
 
 @dataclass(frozen=True)
+class ToolResult:
+    success: bool
+    status: str
+    output: dict[str, Any] = field(default_factory=dict)
+    error: Optional[str] = None
+    retriable: bool = False
+
+    def as_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
 class IncomingRequest:
     organization_id: str
     channel: str

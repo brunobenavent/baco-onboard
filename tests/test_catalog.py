@@ -1,7 +1,10 @@
 import unittest
+import tempfile
+from pathlib import Path
 
 from fabrica.catalog import ProcedureCatalog
 from fabrica.domain import ProcedureDefinition
+from fabrica.repositories import JsonProcedureCatalogRepository
 
 
 class ProcedureCatalogTests(unittest.TestCase):
@@ -46,6 +49,31 @@ class ProcedureCatalogTests(unittest.TestCase):
 
         with self.assertRaises(KeyError):
             catalog.activate("classify-request", "9.9")
+
+    def test_persists_definitions_and_active_version(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repository = JsonProcedureCatalogRepository(Path(directory))
+            catalog = ProcedureCatalog()
+            catalog.register(
+                ProcedureDefinition(
+                    procedure_id="prepare-report",
+                    version="2.0",
+                    name="Preparar informe",
+                    description="Prepara un informe interno.",
+                    severity="medium",
+                    metadata={"script": "procedures.prepare_report"},
+                )
+            )
+            catalog.activate("prepare-report", "2.0")
+            repository.save(catalog)
+
+            restored = repository.get()
+
+            self.assertEqual(restored.get_active("prepare-report").version, "2.0")
+            self.assertEqual(
+                restored.get("prepare-report", "2.0").metadata["script"],
+                "procedures.prepare_report",
+            )
 
 
 if __name__ == "__main__":

@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from dataclasses import asdict
+from pathlib import Path
+import json
+
 from .domain import ProcedureDefinition
 
 
@@ -35,3 +39,38 @@ class ProcedureCatalog:
         except KeyError as error:
             raise KeyError(f"No hay versión activa para: {procedure_id}") from error
         return self.get(procedure_id, version)
+
+    def as_dict(self) -> dict:
+        return {
+            "definitions": [asdict(definition) for definition in self._definitions.values()],
+            "active_versions": self._active_versions,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "ProcedureCatalog":
+        catalog = cls()
+        for raw_definition in data.get("definitions", []):
+            catalog.register(ProcedureDefinition(**raw_definition))
+        catalog._active_versions.update(data.get("active_versions", {}))
+        return catalog
+
+
+class JsonProcedureCatalogRepository:
+    """Persistencia de definiciones y versiones activas del catálogo."""
+
+    def __init__(self, path: Path):
+        self.path = path / "catalog.json" if path.is_dir() else path
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+
+    def save(self, catalog: ProcedureCatalog) -> None:
+        temporary = self.path.with_suffix(".tmp")
+        temporary.write_text(
+            json.dumps(catalog.as_dict(), indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        temporary.replace(self.path)
+
+    def get(self) -> ProcedureCatalog:
+        if not self.path.is_file():
+            return ProcedureCatalog()
+        return ProcedureCatalog.from_dict(json.loads(self.path.read_text(encoding="utf-8")))

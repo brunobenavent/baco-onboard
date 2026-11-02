@@ -1,10 +1,39 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from pathlib import Path
 from typing import Optional
 
-from .domain import Expedient, WorkItem
+from .catalog import JsonProcedureCatalogRepository
+from .domain import Expedient, ToolResult, WorkItem
+
+
+class JsonExecutionRepository:
+    """Ledger durable de resultados indexado por clave de idempotencia."""
+
+    def __init__(self, directory: Path):
+        self.directory = directory
+        self.directory.mkdir(parents=True, exist_ok=True)
+
+    def _path_for(self, idempotency_key: str) -> Path:
+        digest = hashlib.sha256(idempotency_key.encode("utf-8")).hexdigest()
+        return self.directory / f"{digest}.json"
+
+    def save(self, idempotency_key: str, result: ToolResult) -> None:
+        destination = self._path_for(idempotency_key)
+        temporary = destination.with_suffix(".tmp")
+        temporary.write_text(
+            json.dumps(result.as_dict(), indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        temporary.replace(destination)
+
+    def get(self, idempotency_key: str) -> Optional[ToolResult]:
+        path = self._path_for(idempotency_key)
+        if not path.is_file():
+            return None
+        return ToolResult(**json.loads(path.read_text(encoding="utf-8")))
 
 
 class JsonExpedientRepository:

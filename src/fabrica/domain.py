@@ -37,6 +37,24 @@ class ProcedureDefinition:
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
+@dataclass(frozen=True)
+class ProcedureProposal:
+    procedure_id: str
+    procedure_version: str
+    confidence: float
+    rationale: str
+
+
+@dataclass(frozen=True)
+class IncomingRequest:
+    organization_id: str
+    channel: str
+    external_id: str
+    requested_by: str
+    message: str
+    attachments: list[str] = field(default_factory=list)
+
+
 @dataclass
 class Expedient:
     """Contexto durable y agnóstico de una petición de proceso."""

@@ -12,6 +12,10 @@ El núcleo ya incluye un expediente durable y un catálogo versionado de
 procedimientos. El catálogo no conoce proveedores externos: cada procedimiento
 declara su severidad, si requiere aprobación y si admite simulación.
 
+La entrada se normaliza mediante `IntakeService`. Su proponente es sustituible:
+puede ser código determinista, un agente o un servicio externo. La petición
+queda registrada en el expediente antes de cualquier acción externa.
+
 ## Mapa de la fábrica
 
 Abre [diagrams/factory-map.html](diagrams/factory-map.html) para explorar la

@@ -26,6 +26,12 @@ versión. Una versión solo puede utilizarse como versión activa después de se
 registrada y activada explícitamente; los expedientes ya creados conservan la
 versión con la que comenzaron.
 
+`IntakeService` recibe la petición normalizada y delega la propuesta a un
+`ProcedureProposer`. El proponente puede ser una regla, un agente o un servicio
+externo; el núcleo solo exige que devuelva un procedimiento y una versión. La
+petición queda en `awaiting_confirmation` hasta que la política determine el
+siguiente paso.
+
 ## Módulos del núcleo
 
 - **Expediente**: fuente de verdad de la ejecución de BACO: entradas, estado,

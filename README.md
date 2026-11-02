@@ -4,6 +4,10 @@ BACO Onboard convierte peticiones y documentos en procesos ejecutables con
 validación, aprobación y evidencia. Su primer proceso prepara una campaña a
 partir de un Excel; después añadiremos lectura de emails, albaranes y Sage.
 
+La definición de dominio está en [GLOSSARY.md](GLOSSARY.md), la decisión
+arquitectónica en [docs/adr/0001-agnostic-process-core.md](docs/adr/0001-agnostic-process-core.md)
+y el diseño ampliado en [docs/architecture.md](docs/architecture.md).
+
 ## Mapa de la fábrica
 
 Abre [diagrams/factory-map.html](diagrams/factory-map.html) para explorar la

@@ -18,6 +18,7 @@ def esc(value: object) -> str:
 
 def build_svg(data: dict) -> str:
     nodes = {node["id"]: node for node in data["nodes"]}
+    width = max(node["x"] for node in data["nodes"]) + 260
     edges = []
     for edge in data["edges"]:
         source = nodes[edge["from"]]
@@ -39,7 +40,7 @@ def build_svg(data: dict) -> str:
             f'<text class="hint" x="{node["x"] + 14}" y="{node["y"] + 73}">Seleccionar</text>'
             "</g>"
         )
-    return """<svg viewBox="0 0 1480 520" aria-label="Mapa de BACO Onboard">
+    return f"""<svg viewBox="0 0 {width} 520" aria-label="Mapa de BACO Onboard">
       <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z"/></marker></defs>
       <g class="edges">%s</g><g class="nodes">%s</g>
     </svg>""" % ("".join(edges), "".join(cards))
@@ -63,7 +64,7 @@ header {{ padding:24px 28px 18px; border-bottom:1px solid var(--line) }} h1 {{ m
 .search {{ width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); margin-bottom:12px }}
 .node-link {{ display:block; width:100%; text-align:left; padding:8px 10px; margin:2px 0; border:0; border-radius:7px; background:none; color:var(--muted); cursor:pointer }} .node-link:hover,.node-link.active {{ background:var(--panel2); color:var(--text) }}
 main {{ padding:22px; overflow:auto }} .toolbar {{ display:flex; gap:8px; margin-bottom:12px; align-items:center }} .toolbar button {{ padding:7px 11px; border:1px solid var(--line); border-radius:7px; background:var(--panel); color:var(--text); cursor:pointer }}
-.canvas {{ min-width:1000px; border:1px solid var(--line); border-radius:12px; background:radial-gradient(#253041 1px,transparent 1px); background-size:18px 18px; overflow:auto }} svg {{ display:block; width:1480px; height:520px }}
+.canvas {{ min-width:1000px; border:1px solid var(--line); border-radius:12px; background:radial-gradient(#253041 1px,transparent 1px); background-size:18px 18px; overflow:auto }} svg {{ display:block; width:2020px; height:520px }}
 .node {{ cursor:pointer }} .node rect {{ fill:var(--panel); stroke:var(--line); stroke-width:2 }} .node:hover rect,.node.selected rect {{ stroke:var(--accent); stroke-width:3 }} .node.kind-planned-adapter rect {{ stroke:var(--planned); stroke-dasharray:7 5 }}
 .node .kind {{ fill:var(--accent); font-size:12px; font-weight:600 }} .node.kind-planned-adapter .kind {{ fill:var(--planned) }} .node .label {{ fill:var(--text); font-size:15px; font-weight:700 }} .node .hint {{ fill:var(--muted); font-size:11px }}
 .edge {{ fill:none; stroke:#718096; stroke-width:2 }} .edge.planned {{ stroke:var(--planned); stroke-dasharray:7 5 }} marker path {{ fill:#718096 }}

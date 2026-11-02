@@ -1,23 +1,33 @@
 {
   "title": "BACO Onboard",
-  "subtitle": "Mapa de la fábrica de automatización de procesos",
+  "subtitle": "Fábrica agnóstica de automatización de procesos internos",
   "nodes": [
-    {"id": "input", "label": "Petición", "kind": "Entrada", "x": 40, "y": 170, "description": "Una petición normalizada con asunto, audiencia, origen y referencia. Puede llegar desde GitHub, un chat o un formulario.", "source": "src/fabrica/domain.py"},
-    {"id": "excel", "label": "ExcelArticleReader", "kind": "Adapter", "x": 320, "y": 80, "description": "Lee el Excel y exige las columnas title, description, url e image_url.", "source": "src/fabrica/adapters/excel.py"},
-    {"id": "workflow", "label": "PrepareCampaignWorkflow", "kind": "Skill / Workflow", "x": 610, "y": 170, "description": "Coordina la preparación: lee artículos, valida el resultado y crea un trabajo pendiente de aprobación.", "source": "src/fabrica/workflows.py"},
-    {"id": "domain", "label": "WorkItem + CampaignRequest", "kind": "Dominio", "x": 610, "y": 350, "description": "Modelo interno que conserva la petición, el estado, los errores y la evidencia.", "source": "src/fabrica/domain.py"},
-    {"id": "repository", "label": "JsonWorkRepository", "kind": "Repository", "x": 930, "y": 350, "description": "Guarda los trabajos como JSON. Más adelante puede sustituirse por SQLite o PostgreSQL.", "source": "src/fabrica/repositories.py"},
-    {"id": "approval", "label": "Aprobación humana", "kind": "Control", "x": 930, "y": 170, "description": "El envío permanece bloqueado hasta una aprobación explícita.", "source": "src/fabrica/workflows.py"},
-    {"id": "mailchimp", "label": "MailchimpCampaignSender", "kind": "Planned adapter", "x": 1220, "y": 170, "description": "Punto de extensión para programar o enviar la campaña. Todavía no está conectado.", "source": "src/fabrica/ports.py"},
-    {"id": "sage", "label": "SageAdapter", "kind": "Planned adapter", "x": 1220, "y": 350, "description": "Futura conexión para buscar y subir albaranes en Sage.", "source": "planned"}
+    {"id": "channels", "label": "Canales de entrada", "kind": "Entrada", "x": 40, "y": 130, "description": "WhatsApp, Telegram, email y programación automática. Cada canal crea o alimenta un expediente.", "source": "docs/architecture.md"},
+    {"id": "intake", "label": "Petición normalizada", "kind": "Núcleo", "x": 320, "y": 130, "description": "Convierte mensajes, archivos o eventos en una petición común sin depender del canal original.", "source": "GLOSSARY.md"},
+    {"id": "case", "label": "Expediente durable", "kind": "Núcleo", "x": 600, "y": 130, "description": "Fuente de verdad de BACO: identidad, contexto, estado, acciones, decisiones, evidencia y resultado.", "source": "src/fabrica/domain.py"},
+    {"id": "catalog", "label": "Catálogo de procedimientos", "kind": "Procedimientos", "x": 880, "y": 40, "description": "Procedimientos versionados, con propietario, entradas, políticas, severidad y salidas.", "source": "skills/prepare-campaign/SKILL.md"},
+    {"id": "agent", "label": "Agente copiloto", "kind": "Coordinación", "x": 880, "y": 210, "description": "Propone procedimientos, pide información y coordina pasos permitidos. No inventa ni salta políticas.", "source": "docs/architecture.md"},
+    {"id": "policy", "label": "Política y severidad", "kind": "Control", "x": 1160, "y": 40, "description": "Determina permisos, simulación, aprobación humana, caducidad y bloqueo de acciones desconocidas.", "source": "GLOSSARY.md"},
+    {"id": "approval", "label": "Intervención humana", "kind": "Control", "x": 1160, "y": 210, "description": "Permite aprobar, rechazar, pedir corrección o pedir más información según el umbral.", "source": "docs/architecture.md"},
+    {"id": "contract", "label": "Contrato de herramienta", "kind": "Seam", "x": 1440, "y": 130, "description": "Interfaz común de entradas, salidas, permisos, errores e idempotencia.", "source": "GLOSSARY.md"},
+    {"id": "adapters", "label": "Adapters externos", "kind": "Planned", "x": 1720, "y": 130, "description": "MCP, API, SDK o CLI para conectar correo, documentos, comunicaciones, ERP y otros sistemas.", "source": "src/fabrica/ports.py"},
+    {"id": "evidence", "label": "Resultado y auditoría", "kind": "Núcleo", "x": 1440, "y": 330, "description": "Notifica el resultado y conserva una línea temporal completa, incluso en fallos o bloqueos.", "source": "docs/architecture.md"},
+    {"id": "campaign", "label": "Preparar campaña", "kind": "Caso de prueba", "x": 600, "y": 350, "description": "Primer procedimiento concreto: lee y valida artículos desde Excel y deja la campaña pendiente de aprobación.", "source": "src/fabrica/workflows.py"},
+    {"id": "document", "label": "Procesar documento", "kind": "Futuro", "x": 880, "y": 390, "description": "Procedimiento futuro para recibir, clasificar, extraer y registrar documentos empresariales.", "source": "docs/architecture.md"}
   ],
   "edges": [
-    {"from": "input", "to": "workflow"},
-    {"from": "excel", "to": "workflow"},
-    {"from": "workflow", "to": "domain"},
-    {"from": "domain", "to": "repository"},
-    {"from": "workflow", "to": "approval"},
-    {"from": "approval", "to": "mailchimp"},
-    {"from": "workflow", "to": "sage", "planned": true}
+    {"from": "channels", "to": "intake"},
+    {"from": "intake", "to": "case"},
+    {"from": "case", "to": "catalog"},
+    {"from": "catalog", "to": "agent"},
+    {"from": "agent", "to": "policy"},
+    {"from": "policy", "to": "approval"},
+    {"from": "policy", "to": "contract"},
+    {"from": "approval", "to": "contract"},
+    {"from": "contract", "to": "adapters", "planned": true},
+    {"from": "adapters", "to": "evidence", "planned": true},
+    {"from": "case", "to": "evidence"},
+    {"from": "catalog", "to": "campaign"},
+    {"from": "catalog", "to": "document", "planned": true}
   ]
 }

@@ -1,0 +1,63 @@
+# BACO Onboard — fábrica de automatización de procesos
+
+BACO Onboard convierte peticiones y documentos en procesos ejecutables con
+validación, aprobación y evidencia. Su primer proceso prepara una campaña a
+partir de un Excel; después añadiremos lectura de emails, albaranes y Sage.
+
+## Mapa de la fábrica
+
+Abre [diagrams/factory-map.html](diagrams/factory-map.html) para explorar la
+arquitectura. Se regenera desde `diagrams/factory-map.json` con:
+
+```bash
+python3 scripts/build_map.py
+```
+
+## Recorrido
+
+```text
+request.json + articulos.xlsx
+        ↓
+PrepareCampaignWorkflow
+        ↓
+ExcelArticleReader
+        ↓
+validación de artículos
+        ↓
+campaign-draft.json
+        ↓
+aprobación humana (siguiente fase)
+        ↓
+MailchimpCampaignSender (siguiente fase)
+```
+
+El workflow no conoce GitHub, un chat ni Mailchimp. Esas piezas son adapters
+que traducen entradas y salidas externas al modelo interno de la fábrica.
+
+## Ejecutar
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -e .
+.venv/bin/python -m fabrica.cli prepare \
+  --request request.example.json \
+  --articles articulos.example.xlsx \
+  --output campaign-draft.json
+```
+
+Para usarlo con tus propios datos, el Excel debe tener estas columnas:
+
+```text
+title, description, url, image_url
+```
+
+## Contratos importantes
+
+- `WorkRepository` conserva el trabajo y permite sustituir JSON por SQLite,
+  PostgreSQL o un servicio externo.
+- `ArticleReader` permite sustituir Excel por CSV, Google Sheets o un adjunto
+  recibido desde un chat.
+- `CampaignSender` permite sustituir el envío simulado por Mailchimp, Brevo o
+  un proveedor interno.
+- El workflow solo prepara y valida. El envío queda fuera hasta añadir una
+  aprobación explícita.

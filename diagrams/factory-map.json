@@ -1,0 +1,23 @@
+{
+  "title": "BACO Onboard",
+  "subtitle": "Mapa de la fábrica de automatización de procesos",
+  "nodes": [
+    {"id": "input", "label": "Petición", "kind": "Entrada", "x": 40, "y": 170, "description": "Una petición normalizada con asunto, audiencia, origen y referencia. Puede llegar desde GitHub, un chat o un formulario.", "source": "src/fabrica/domain.py"},
+    {"id": "excel", "label": "ExcelArticleReader", "kind": "Adapter", "x": 320, "y": 80, "description": "Lee el Excel y exige las columnas title, description, url e image_url.", "source": "src/fabrica/adapters/excel.py"},
+    {"id": "workflow", "label": "PrepareCampaignWorkflow", "kind": "Skill / Workflow", "x": 610, "y": 170, "description": "Coordina la preparación: lee artículos, valida el resultado y crea un trabajo pendiente de aprobación.", "source": "src/fabrica/workflows.py"},
+    {"id": "domain", "label": "WorkItem + CampaignRequest", "kind": "Dominio", "x": 610, "y": 350, "description": "Modelo interno que conserva la petición, el estado, los errores y la evidencia.", "source": "src/fabrica/domain.py"},
+    {"id": "repository", "label": "JsonWorkRepository", "kind": "Repository", "x": 930, "y": 350, "description": "Guarda los trabajos como JSON. Más adelante puede sustituirse por SQLite o PostgreSQL.", "source": "src/fabrica/repositories.py"},
+    {"id": "approval", "label": "Aprobación humana", "kind": "Control", "x": 930, "y": 170, "description": "El envío permanece bloqueado hasta una aprobación explícita.", "source": "src/fabrica/workflows.py"},
+    {"id": "mailchimp", "label": "MailchimpCampaignSender", "kind": "Planned adapter", "x": 1220, "y": 170, "description": "Punto de extensión para programar o enviar la campaña. Todavía no está conectado.", "source": "src/fabrica/ports.py"},
+    {"id": "sage", "label": "SageAdapter", "kind": "Planned adapter", "x": 1220, "y": 350, "description": "Futura conexión para buscar y subir albaranes en Sage.", "source": "planned"}
+  ],
+  "edges": [
+    {"from": "input", "to": "workflow"},
+    {"from": "excel", "to": "workflow"},
+    {"from": "workflow", "to": "domain"},
+    {"from": "domain", "to": "repository"},
+    {"from": "workflow", "to": "approval"},
+    {"from": "approval", "to": "mailchimp"},
+    {"from": "workflow", "to": "sage", "planned": true}
+  ]
+}

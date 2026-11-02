@@ -77,6 +77,44 @@ python3 -m venv .venv
   --output campaign-draft.json
 ```
 
+## Comandos de la fábrica
+
+Después de instalar el proyecto, el comando principal es `baco`:
+
+```bash
+baco --help
+```
+
+Iniciar un proceso y crear su expediente:
+
+```bash
+baco run \
+  --message "Resume el PDF adjunto" \
+  --channel email \
+  --organization empresa-demo \
+  --requested-by brunobenavent@gmail.com \
+  --external-id mail-001 \
+  --procedure-id summarize-pdf-email \
+  --procedure-version 1.0 \
+  --severity low \
+  --state-dir .baco/state \
+  --output .baco/expedients/expedient.json
+```
+
+Consultar o resolver el expediente:
+
+```bash
+baco status --id EXPEDIENT_ID --state-dir .baco/state
+baco approve --id EXPEDIENT_ID --by operador-1 --state-dir .baco/state
+baco reject --id EXPEDIENT_ID --by operador-1 --comment "Falta revisar el PDF" --state-dir .baco/state
+baco expire --id EXPEDIENT_ID --state-dir .baco/state
+```
+
+`baco run` es la entrada equivalente a un `superboard run`: inicia un proceso
+con una definición y versión concretas. La CLI todavía no conecta Gmail ni
+Telegram por sí sola; esos adapters se registran cuando se configura cada
+entorno.
+
 Para usarlo con tus propios datos, el Excel debe tener estas columnas:
 
 ```text

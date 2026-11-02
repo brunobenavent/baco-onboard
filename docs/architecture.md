@@ -44,6 +44,10 @@ comentario, estado y evento en la línea temporal del expediente.
 adapter registrado. El núcleo no sabe si ese adapter termina en Telegram,
 WhatsApp, email u otro canal.
 
+`ProcessRuntime` compone las piezas del núcleo para el recorrido inicial:
+recibe la petición, crea el expediente, resuelve el procedimiento, aplica la
+política y persiste el estado antes de cualquier ejecución externa.
+
 ## Módulos del núcleo
 
 - **Expediente**: fuente de verdad de la ejecución de BACO: entradas, estado,

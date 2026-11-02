@@ -26,6 +26,9 @@ rechazar o solicitar cambios y deja la decisión en la evidencia del expediente.
 Los resultados pueden notificarse mediante `NotificationService`, que usa un
 adapter por canal y registra cada notificación en la línea temporal.
 
+`ProcessRuntime` ofrece el recorrido compuesto de recepción, propuesta,
+política y persistencia del expediente.
+
 ## Mapa de la fábrica
 
 Abre [diagrams/factory-map.html](diagrams/factory-map.html) para explorar la

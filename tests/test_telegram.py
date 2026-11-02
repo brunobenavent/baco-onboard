@@ -31,6 +31,18 @@ class TelegramAdapterTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             messenger.send("missing", "Prueba BACO")
 
+    def test_reads_updates_without_exposing_the_token(self):
+        def request(url, data):
+            self.assertIn("getUpdates", url)
+            self.assertIsNone(data)
+            return json.dumps({"ok": True, "result": [{"update_id": 7}]}).encode()
+
+        messenger = TelegramBotMessenger("secret-token", request_fn=request)
+
+        updates = messenger.get_updates()
+
+        self.assertEqual(updates[0]["update_id"], 7)
+
 
 if __name__ == "__main__":
     unittest.main()

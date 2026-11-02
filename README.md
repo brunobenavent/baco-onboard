@@ -216,6 +216,32 @@ El wizard explica cómo crear el bot con BotFather y guarda el token en
 El token nunca debe escribirse en el repositorio ni pasarse como argumento del
 comando.
 
+### Recibir automatizaciones desde Telegram
+
+Una vez configurado el bot, consulta los mensajes pendientes con:
+
+```bash
+set -a; source .env; set +a
+PYTHONPATH=src python3 -m fabrica.cli telegram-poll --state-dir .baco/state
+```
+
+El primer diálogo es guiado:
+
+```text
+/start
+→ ¿Qué quieres automatizar?
+→ ¿Qué debe desencadenarlo?
+→ ¿Qué datos recibirá?
+→ ¿Qué resultado quieres?
+→ propuesta
+→ ACTIVAR
+```
+
+El receptor solo procesa el `BACO_TELEGRAM_CHAT_ID` configurado y guarda el
+estado de la conversación localmente. En esta primera versión `telegram-poll`
+consulta una tanda de mensajes; después podremos dejarlo ejecutándose como
+servicio o sustituirlo por un webhook.
+
 ### 5. Estados posibles
 
 ```text

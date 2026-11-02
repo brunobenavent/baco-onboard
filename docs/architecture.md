@@ -55,6 +55,10 @@ lector de email, extractor de PDF y resumidor. Así podemos cambiar Gmail por
 otro buzón, `pypdf` por otro extractor o el modelo de resumen sin cambiar el
 procedimiento.
 
+Telegram también funciona como entrada conversacional: el receptor valida el
+chat autorizado, mantiene el estado del diálogo y convierte la idea del usuario
+en una propuesta de procedimiento antes de activarla.
+
 ## Módulos del núcleo
 
 - **Expediente**: fuente de verdad de la ejecución de BACO: entradas, estado,

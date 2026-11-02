@@ -1,4 +1,5 @@
 import unittest
+from datetime import datetime, timezone, timedelta
 
 from fabrica.approval import ApprovalService
 from fabrica.domain import Expedient
@@ -49,6 +50,29 @@ class ApprovalServiceTests(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             ApprovalService().reject(expedient, "manager-8")
+
+    def test_expires_an_approval_after_its_deadline(self):
+        expedient = pending_expedient()
+        service = ApprovalService()
+        deadline = datetime.now(timezone.utc) - timedelta(minutes=1)
+        service.set_expiry(expedient, deadline.isoformat())
+
+        expired = service.expire_if_due(expedient)
+
+        self.assertTrue(expired)
+        self.assertEqual(expedient.status, "approval_expired")
+        self.assertEqual(expedient.timeline[-1]["type"], "approval_expired")
+
+    def test_does_not_expire_a_future_approval(self):
+        expedient = pending_expedient()
+        service = ApprovalService()
+        deadline = datetime.now(timezone.utc) + timedelta(minutes=10)
+        service.set_expiry(expedient, deadline.isoformat())
+
+        expired = service.expire_if_due(expedient)
+
+        self.assertFalse(expired)
+        self.assertEqual(expedient.status, "awaiting_approval")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
+from typing import Optional
+
 from .domain import Expedient
 
 
@@ -21,6 +24,27 @@ class ApprovalService:
             decided_by,
             comment,
         )
+
+    def set_expiry(self, expedient: Expedient, expires_at: str) -> None:
+        approval = expedient.evidence.setdefault("approval", {})
+        approval["expires_at"] = expires_at
+        expedient.record_event("approval_deadline_set", {"expires_at": expires_at})
+
+    def expire_if_due(
+        self, expedient: Expedient, now: Optional[datetime] = None
+    ) -> bool:
+        if expedient.status != "awaiting_approval":
+            return False
+        expires_at = expedient.evidence.get("approval", {}).get("expires_at")
+        if not expires_at:
+            return False
+        deadline = datetime.fromisoformat(expires_at)
+        current_time = now or datetime.now(timezone.utc)
+        if deadline > current_time:
+            return False
+        expedient.move_to("approval_expired")
+        expedient.record_event("approval_expired", {"expires_at": expires_at})
+        return True
 
     def _decide(
         self,

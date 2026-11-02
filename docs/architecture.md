@@ -39,6 +39,8 @@ de la organización. Puede dejar el expediente listo para ejecución, enviarlo a
 `ApprovalService` resuelve la intervención humana con tres decisiones posibles:
 aprobar, rechazar o solicitar cambios. Cada decisión registra identidad,
 comentario, estado y evento en la línea temporal del expediente.
+Las aprobaciones pueden tener una fecha límite; al caducar pasan a
+`approval_expired` y dejan de poder resolverse.
 
 `NotificationService` publica el resultado por el canal de origen mediante un
 adapter registrado. El núcleo no sabe si ese adapter termina en Telegram,

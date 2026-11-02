@@ -22,6 +22,8 @@ quedan bloqueados.
 
 La decisión humana se gestiona mediante `ApprovalService`, que permite aprobar,
 rechazar o solicitar cambios y deja la decisión en la evidencia del expediente.
+También admite fechas límite para que una aprobación antigua caduque antes de
+ejecutar una acción.
 
 Los resultados pueden notificarse mediante `NotificationService`, que usa un
 adapter por canal y registra cada notificación en la línea temporal.

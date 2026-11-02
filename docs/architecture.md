@@ -36,6 +36,10 @@ siguiente paso.
 de la organización. Puede dejar el expediente listo para ejecución, enviarlo a
 `awaiting_approval` o bloquearlo cuando la severidad no está clasificada.
 
+`ApprovalService` resuelve la intervención humana con tres decisiones posibles:
+aprobar, rechazar o solicitar cambios. Cada decisión registra identidad,
+comentario, estado y evento en la línea temporal del expediente.
+
 ## Módulos del núcleo
 
 - **Expediente**: fuente de verdad de la ejecución de BACO: entradas, estado,

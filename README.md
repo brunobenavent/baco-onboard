@@ -20,6 +20,9 @@ queda registrada en el expediente antes de cualquier acción externa.
 que lo superan esperan aprobación humana y los que no tienen severidad válida
 quedan bloqueados.
 
+La decisión humana se gestiona mediante `ApprovalService`, que permite aprobar,
+rechazar o solicitar cambios y deja la decisión en la evidencia del expediente.
+
 ## Mapa de la fábrica
 
 Abre [diagrams/factory-map.html](diagrams/factory-map.html) para explorar la

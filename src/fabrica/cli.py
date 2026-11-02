@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from uuid import uuid4
 
 from .approval import ApprovalService
 from .catalog import ProcedureCatalog
@@ -88,7 +89,18 @@ def _run_named_process(args: argparse.Namespace) -> int:
         print(f"Procedimiento no conocido: {args.procedure}")
         return 1
     local_message = None
-    if args.email_file:
+    if args.pdf:
+        from .email_process import EmailAttachment, EmailMessage
+
+        local_message = EmailMessage(
+            message_id=f"local-{uuid4().hex[:10]}",
+            sender=args.sender or "",
+            subject=args.subject,
+            attachments=[EmailAttachment(args.pdf.name, args.pdf, "application/pdf")],
+        )
+        args.sender = args.sender or local_message.sender
+        args.telegram = args.telegram or "local-telegram"
+    elif args.email_file:
         from .adapters.local import LocalJsonEmailReader
 
         local_message = LocalJsonEmailReader().read(args.email_file)
@@ -148,6 +160,8 @@ def main() -> int:
     run.add_argument("--sender")
     run.add_argument("--telegram")
     run.add_argument("--email-file", type=Path)
+    run.add_argument("--pdf", type=Path)
+    run.add_argument("--subject", default="Documento para resumir")
     run.add_argument("--outbox", type=Path, default=Path(".baco/telegram-outbox"))
     _add_run_arguments(run, required=False)
     intake = subparsers.add_parser("intake", help="registra una entrada de proceso")

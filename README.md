@@ -185,20 +185,20 @@ EmailMessage
 El procedimiento y sus adapters ya tienen pruebas falsas de extremo a
 extremo. Gmail y Telegram todavía deben registrarse en el entorno de ejecución.
 
-Para probarlo sin conectores de pago, copia el ejemplo junto a un PDF real y
-ejecuta:
+Para probarlo sin conectores de pago, basta con proporcionar un PDF real:
 
 ```bash
-cp examples/email.example.json /tmp/email.json
-# coloca el PDF como /tmp/documento.pdf y actualiza el path del JSON si hace falta
 .venv/bin/baco run summarize-pdf-email \
-  --email-file /tmp/email.json \
+  --pdf /ruta/al/documento.pdf \
+  --sender brunobenavent@gmail.com \
   --outbox .baco/telegram-outbox
 ```
 
-En este modo el correo se lee desde JSON y el “Telegram” se simula escribiendo
+En este modo se construye un email local y el “Telegram” se simula escribiendo
 un fichero de texto en `.baco/telegram-outbox/`. El procedimiento, el PDF y el
-resumen son reales; solo se sustituyen los dos extremos externos.
+resumen son reales; solo se sustituyen los dos extremos externos. También se
+puede usar el formato JSON de [email.example.json](examples/email.example.json)
+si se quiere simular un email con varios metadatos.
 
 ### 5. Estados posibles
 

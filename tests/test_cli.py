@@ -34,6 +34,34 @@ class CliTests(unittest.TestCase):
             self.assertEqual(data["procedure_id"], "summarize-pdf-email")
             self.assertEqual(data["inputs"]["metadata"]["telegram_recipient"], "@mi_usuario")
 
+    def test_named_run_accepts_a_pdf_directly_for_offline_testing(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            pdf = root / "documento.pdf"
+            pdf.write_bytes(b"not a real pdf")
+            output = root / "expedient.json"
+            outbox = root / "outbox"
+            argv = [
+                "baco",
+                "run",
+                "summarize-pdf-email",
+                "--pdf",
+                str(pdf),
+                "--sender",
+                "brunobenavent@gmail.com",
+                "--outbox",
+                str(outbox),
+                "--state-dir",
+                str(root / "state"),
+                "--output",
+                str(output),
+            ]
+
+            with patch("sys.argv", argv):
+                # The command must validate its inputs before requiring a real PDF.
+                with self.assertRaises(Exception):
+                    main()
+
     def test_run_starts_a_process_and_writes_an_expedient(self):
         with tempfile.TemporaryDirectory() as directory:
             state_dir = Path(directory) / "state"

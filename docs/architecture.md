@@ -32,6 +32,10 @@ externo; el núcleo solo exige que devuelva un procedimiento y una versión. La
 petición queda en `awaiting_confirmation` hasta que la política determine el
 siguiente paso.
 
+`PolicyEngine` compara la severidad del procedimiento con el umbral automático
+de la organización. Puede dejar el expediente listo para ejecución, enviarlo a
+`awaiting_approval` o bloquearlo cuando la severidad no está clasificada.
+
 ## Módulos del núcleo
 
 - **Expediente**: fuente de verdad de la ejecución de BACO: entradas, estado,

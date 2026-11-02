@@ -16,6 +16,10 @@ La entrada se normaliza mediante `IntakeService`. Su proponente es sustituible:
 puede ser código determinista, un agente o un servicio externo. La petición
 queda registrada en el expediente antes de cualquier acción externa.
 
+`PolicyEngine` aplica el umbral de severidad de la organización: los procesos
+que lo superan esperan aprobación humana y los que no tienen severidad válida
+quedan bloqueados.
+
 ## Mapa de la fábrica
 
 Abre [diagrams/factory-map.html](diagrams/factory-map.html) para explorar la

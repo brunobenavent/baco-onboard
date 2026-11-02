@@ -46,6 +46,14 @@ class ProcedureProposal:
 
 
 @dataclass(frozen=True)
+class PolicyDecision:
+    allowed: bool
+    requires_human: bool
+    status: str
+    reason: str
+
+
+@dataclass(frozen=True)
 class IncomingRequest:
     organization_id: str
     channel: str

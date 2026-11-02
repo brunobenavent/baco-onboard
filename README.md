@@ -31,6 +31,11 @@ adapter por canal y registra cada notificación en la línea temporal.
 `ProcessRuntime` ofrece el recorrido compuesto de recepción, propuesta,
 política y persistencia del expediente.
 
+El primer procedimiento de prueba es `SummarizePdfEmailProcess`: acepta un
+email de `brunobenavent@gmail.com` con un único PDF, extrae su texto mediante
+`PypdfTextExtractor`, lo entrega a un `Summarizer` y envía el resultado mediante
+un adapter de Telegram.
+
 ## Mapa de la fábrica
 
 Abre [diagrams/factory-map.html](diagrams/factory-map.html) para explorar la

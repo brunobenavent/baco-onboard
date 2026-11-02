@@ -50,6 +50,11 @@ WhatsApp, email u otro canal.
 recibe la petición, crea el expediente, resuelve el procedimiento, aplica la
 política y persiste el estado antes de cualquier ejecución externa.
 
+El procedimiento de prueba email-PDF-resumen-Telegram separa tres adapters:
+lector de email, extractor de PDF y resumidor. Así podemos cambiar Gmail por
+otro buzón, `pypdf` por otro extractor o el modelo de resumen sin cambiar el
+procedimiento.
+
 ## Módulos del núcleo
 
 - **Expediente**: fuente de verdad de la ejecución de BACO: entradas, estado,

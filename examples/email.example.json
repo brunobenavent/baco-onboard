@@ -1,0 +1,12 @@
+{
+  "message_id": "local-email-001",
+  "sender": "brunobenavent@gmail.com",
+  "subject": "Documento para resumir",
+  "attachments": [
+    {
+      "filename": "documento.pdf",
+      "path": "documento.pdf",
+      "content_type": "application/pdf"
+    }
+  ]
+}

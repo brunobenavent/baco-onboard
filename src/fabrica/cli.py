@@ -73,6 +73,7 @@ def _run_process(args: argparse.Namespace) -> int:
         )
     )
     output = args.output or Path(".baco/expedients") / f"{expedient.id}.json"
+    args.output = output
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(
         json.dumps(expedient.as_dict(), indent=2, ensure_ascii=False) + "\n",
@@ -86,7 +87,14 @@ def _run_named_process(args: argparse.Namespace) -> int:
     if args.procedure != "summarize-pdf-email":
         print(f"Procedimiento no conocido: {args.procedure}")
         return 1
-    if not args.sender or not args.telegram:
+    local_message = None
+    if args.email_file:
+        from .adapters.local import LocalJsonEmailReader
+
+        local_message = LocalJsonEmailReader().read(args.email_file)
+        args.sender = args.sender or local_message.sender
+        args.telegram = args.telegram or "local-telegram"
+    elif not args.sender or not args.telegram:
         print("summarize-pdf-email requiere --sender y --telegram")
         return 2
 
@@ -99,7 +107,37 @@ def _run_named_process(args: argparse.Namespace) -> int:
     args.procedure_version = "1.0"
     args.severity = "low"
     args.metadata = {"telegram_recipient": args.telegram}
-    return _run_process(args)
+    exit_code = _run_process(args)
+    if exit_code != 0 or local_message is None:
+        return exit_code
+
+    from .adapters.local import FileMessenger, SimpleSummarizer
+    from .adapters.pdf import PypdfTextExtractor
+    from .email_process import SummarizePdfEmailProcess
+
+    delivery = SummarizePdfEmailProcess(
+        PypdfTextExtractor(),
+        SimpleSummarizer(),
+        FileMessenger(args.outbox),
+        args.sender,
+    ).run(local_message, args.telegram)
+    repository = JsonExpedientRepository(args.state_dir)
+    expedient = repository.get(json.loads(args.output.read_text(encoding="utf-8"))["id"])
+    if expedient is None:
+        return 1
+    expedient.evidence["delivery"] = {
+        "status": delivery.status,
+        "summary": delivery.summary,
+        "notification_id": delivery.notification_id,
+    }
+    expedient.move_to("completed")
+    repository.save(expedient)
+    args.output.write_text(
+        json.dumps(expedient.as_dict(), indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    print(json.dumps(expedient.as_dict(), indent=2, ensure_ascii=False))
+    return 0
 
 
 def main() -> int:
@@ -109,6 +147,8 @@ def main() -> int:
     run.add_argument("procedure", nargs="?")
     run.add_argument("--sender")
     run.add_argument("--telegram")
+    run.add_argument("--email-file", type=Path)
+    run.add_argument("--outbox", type=Path, default=Path(".baco/telegram-outbox"))
     _add_run_arguments(run, required=False)
     intake = subparsers.add_parser("intake", help="registra una entrada de proceso")
     _add_run_arguments(intake)

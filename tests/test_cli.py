@@ -8,6 +8,32 @@ from fabrica.cli import main
 
 
 class CliTests(unittest.TestCase):
+    def test_named_run_hides_internal_expedient_configuration(self):
+        with tempfile.TemporaryDirectory() as directory:
+            state_dir = Path(directory) / "state"
+            output = Path(directory) / "expedient.json"
+            argv = [
+                "baco",
+                "run",
+                "summarize-pdf-email",
+                "--sender",
+                "brunobenavent@gmail.com",
+                "--telegram",
+                "@mi_usuario",
+                "--state-dir",
+                str(state_dir),
+                "--output",
+                str(output),
+            ]
+
+            with patch("sys.argv", argv):
+                exit_code = main()
+
+            data = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(data["procedure_id"], "summarize-pdf-email")
+            self.assertEqual(data["inputs"]["metadata"]["telegram_recipient"], "@mi_usuario")
+
     def test_run_starts_a_process_and_writes_an_expedient(self):
         with tempfile.TemporaryDirectory() as directory:
             state_dir = Path(directory) / "state"

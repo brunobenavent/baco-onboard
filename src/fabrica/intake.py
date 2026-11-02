@@ -36,6 +36,7 @@ class IntakeService:
                 "message": request.message,
                 "attachments": request.attachments,
                 "external_id": request.external_id,
+                "metadata": request.metadata,
             },
         )
         expedient.record_event(

@@ -73,6 +73,7 @@ class IncomingRequest:
     requested_by: str
     message: str
     attachments: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass

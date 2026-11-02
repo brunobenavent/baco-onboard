@@ -24,18 +24,18 @@ class CommandLineProposer:
         return self.proposal
 
 
-def _add_run_arguments(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--message", required=True)
-    parser.add_argument("--channel", required=True)
-    parser.add_argument("--organization", required=True)
-    parser.add_argument("--requested-by", required=True)
-    parser.add_argument("--external-id", required=True)
-    parser.add_argument("--procedure-id", required=True)
-    parser.add_argument("--procedure-version", required=True)
-    parser.add_argument("--severity", required=True)
+def _add_run_arguments(parser: argparse.ArgumentParser, required: bool = True) -> None:
+    parser.add_argument("--message", required=required)
+    parser.add_argument("--channel", required=required)
+    parser.add_argument("--organization", required=required)
+    parser.add_argument("--requested-by", required=required)
+    parser.add_argument("--external-id", required=required)
+    parser.add_argument("--procedure-id", required=required)
+    parser.add_argument("--procedure-version", required=required)
+    parser.add_argument("--severity", required=required)
     parser.add_argument("--max-automatic-severity", default="low")
-    parser.add_argument("--state-dir", type=Path, required=True)
-    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--state-dir", type=Path, required=required, default=Path(".baco/state"))
+    parser.add_argument("--output", type=Path, required=required)
 
 
 def _run_process(args: argparse.Namespace) -> int:
@@ -69,10 +69,12 @@ def _run_process(args: argparse.Namespace) -> int:
             external_id=args.external_id,
             requested_by=args.requested_by,
             message=args.message,
+            metadata=getattr(args, "metadata", {}),
         )
     )
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(
+    output = args.output or Path(".baco/expedients") / f"{expedient.id}.json"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(
         json.dumps(expedient.as_dict(), indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
@@ -80,11 +82,34 @@ def _run_process(args: argparse.Namespace) -> int:
     return 0 if expedient.status in {"ready_for_execution", "awaiting_approval"} else 1
 
 
+def _run_named_process(args: argparse.Namespace) -> int:
+    if args.procedure != "summarize-pdf-email":
+        print(f"Procedimiento no conocido: {args.procedure}")
+        return 1
+    if not args.sender or not args.telegram:
+        print("summarize-pdf-email requiere --sender y --telegram")
+        return 2
+
+    args.message = f"Resumir los PDFs recibidos de {args.sender} y enviar el resultado por Telegram"
+    args.channel = "email"
+    args.organization = "personal"
+    args.requested_by = args.sender
+    args.external_id = "manual-run"
+    args.procedure_id = "summarize-pdf-email"
+    args.procedure_version = "1.0"
+    args.severity = "low"
+    args.metadata = {"telegram_recipient": args.telegram}
+    return _run_process(args)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="BACO: fábrica agnóstica de procesos")
     subparsers = parser.add_subparsers(dest="command", required=True)
-    run = subparsers.add_parser("run", help="inicia un proceso y crea su expediente")
-    _add_run_arguments(run)
+    run = subparsers.add_parser("run", help="inicia un proceso por nombre")
+    run.add_argument("procedure", nargs="?")
+    run.add_argument("--sender")
+    run.add_argument("--telegram")
+    _add_run_arguments(run, required=False)
     intake = subparsers.add_parser("intake", help="registra una entrada de proceso")
     _add_run_arguments(intake)
 
@@ -114,7 +139,17 @@ def main() -> int:
     prepare.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
+    if args.command == "run" and args.procedure:
+        return _run_named_process(args)
+
     if args.command in {"run", "intake"}:
+        required_fields = [
+            "message", "channel", "organization", "requested_by", "external_id",
+            "procedure_id", "procedure_version", "severity", "output",
+        ]
+        missing = [field for field in required_fields if getattr(args, field, None) is None]
+        if missing:
+            parser.error(f"run técnico requiere: {', '.join('--' + field.replace('_', '-') for field in missing)}")
         return _run_process(args)
 
     if args.command in {"approve", "reject", "expire", "status"}:

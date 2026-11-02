@@ -78,10 +78,47 @@ python3 -m venv .venv
 
 ### 2. Comandos de la fábrica
 
-Iniciar un proceso y crear su expediente:
+Iniciar el procedimiento de resumen de PDF:
 
 ```bash
-.venv/bin/baco run \
+.venv/bin/baco run summarize-pdf-email \
+  --sender brunobenavent@gmail.com \
+  --telegram @mi_usuario
+```
+
+El usuario solo proporciona los datos propios del proceso:
+
+| Entrada | Ejemplo | Significado |
+| --- | --- | --- |
+| `summarize-pdf-email` | nombre del proceso | Procedimiento que se quiere iniciar |
+| `--sender` | `brunobenavent@gmail.com` | Remitente permitido |
+| `--telegram` | `@mi_usuario` | Destinatario del resumen |
+
+La fábrica decide internamente la versión, severidad, organización por defecto,
+carpeta de estado y formato del expediente.
+
+Consultar o resolver el expediente cuando sea necesario:
+
+```bash
+.venv/bin/baco status --id EXPEDIENT_ID --state-dir .baco/state
+.venv/bin/baco approve --id EXPEDIENT_ID --by operador-1 --comment "Revisado" --state-dir .baco/state
+.venv/bin/baco reject --id EXPEDIENT_ID --by operador-1 --comment "Falta revisar el PDF" --state-dir .baco/state
+.venv/bin/baco expire --id EXPEDIENT_ID --state-dir .baco/state
+```
+
+`baco run <procedimiento>` es la entrada equivalente a un `superboard run`:
+selecciona un procedimiento por nombre y aplica su definición interna.
+`baco intake` y el modo técnico de `baco run` quedan para integradores y
+diagnóstico, no para el uso diario.
+
+### Modo técnico
+
+Cuando se está desarrollando un procedimiento nuevo, se puede iniciar con todos
+los metadatos explícitos. Este modo no es necesario para ejecutar un proceso ya
+registrado:
+
+```bash
+.venv/bin/baco intake \
   --message "Resume el PDF adjunto" \
   --channel email \
   --organization empresa-demo \
@@ -91,36 +128,8 @@ Iniciar un proceso y crear su expediente:
   --procedure-version 1.0 \
   --severity low \
   --state-dir .baco/state \
-  --output .baco/expedients/expedient.json
+  --output .baco/expedient.json
 ```
-
-Entradas obligatorias de `baco run`:
-
-| Entrada | Ejemplo | Significado |
-| --- | --- | --- |
-| `--message` | `Resume el PDF` | Petición normalizada |
-| `--channel` | `email` | Canal de origen |
-| `--organization` | `empresa-demo` | Organización propietaria |
-| `--requested-by` | `brunobenavent@gmail.com` | Solicitante |
-| `--external-id` | `mail-001` | Identificador del evento original |
-| `--procedure-id` | `summarize-pdf-email` | Procedimiento a iniciar |
-| `--procedure-version` | `1.0` | Versión exacta |
-| `--severity` | `low` | `low`, `medium`, `high` o `critical` |
-| `--state-dir` | `.baco/state` | Estado persistente |
-| `--output` | `.baco/expedient.json` | Salida JSON del comando |
-
-Consultar o resolver el expediente:
-
-```bash
-.venv/bin/baco status --id EXPEDIENT_ID --state-dir .baco/state
-.venv/bin/baco approve --id EXPEDIENT_ID --by operador-1 --comment "Revisado" --state-dir .baco/state
-.venv/bin/baco reject --id EXPEDIENT_ID --by operador-1 --comment "Falta revisar el PDF" --state-dir .baco/state
-.venv/bin/baco expire --id EXPEDIENT_ID --state-dir .baco/state
-```
-
-`baco run` es la entrada equivalente a un `superboard run`: inicia un proceso
-con una definición y versión concretas. `baco intake` es un alias para registrar
-la entrada inicial.
 
 ### 3. Proceso de campaña desde Excel
 
